@@ -36,8 +36,9 @@ export default function ReportUpload({ onResult, onError, onStart }: Props) {
 
   return (
     <div
-      className={`rounded-xl border-2 border-dashed p-10 text-center transition-colors ${
-        dragOver ? "border-sky-400 bg-sky-950/30" : "border-slate-700 bg-slate-900/40"
+      id="upload"
+      className={`rounded-card-lg border p-16 text-center transition-colors ${
+        dragOver ? "border-bioluminescent-lime bg-bioluminescent-lime/5" : "border-graphite bg-abyssal-ink"
       }`}
       onDragOver={(e) => {
         e.preventDefault();
@@ -61,23 +62,29 @@ export default function ReportUpload({ onResult, onError, onStart }: Props) {
           if (file) void handleFile(file);
         }}
       />
-      <p className="text-lg font-medium text-slate-200">
-        Drop a prescription PDF here, or
+
+      <p className="font-mono text-caption uppercase tracking-[-0.02em] text-lichen">Prescription intake</p>
+
+      <p className="mt-4 text-heading-sm text-bone-white">
+        Drop a prescription PDF, or
         <button
           type="button"
-          className="ml-1 text-sky-400 underline underline-offset-2 hover:text-sky-300"
+          className="ml-2 rounded-btn bg-bioluminescent-lime px-4 py-1.5 align-middle font-mono text-caption uppercase text-abyssal-ink disabled:opacity-50"
           onClick={() => inputRef.current?.click()}
           disabled={loading}
         >
-          browse
+          browse files
         </button>
       </p>
-      <p className="mt-1 text-sm text-slate-500">PDF only, up to 15MB. Text or scanned (OCR) documents supported.</p>
+
+      <p className="mt-4 text-caption text-lichen/60">
+        PDF only, up to 15MB. Embedded text or scanned (OCR) documents supported.
+      </p>
+
       {fileName && (
-        <p className="mt-4 text-sm text-slate-400">
-          {loading ? "Analyzing " : "Last file: "}
-          <span className="text-slate-200">{fileName}</span>
-          {loading && <span className="ml-2 animate-pulse">…</span>}
+        <p className="mt-6 font-mono text-caption text-lichen">
+          {loading ? "ANALYZING" : "LAST FILE"} — <span className="text-bone-white">{fileName}</span>
+          {loading && <span className="ml-2 animate-pulse text-bioluminescent-lime">●</span>}
         </p>
       )}
     </div>

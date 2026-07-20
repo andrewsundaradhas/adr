@@ -1,23 +1,14 @@
 import type { AnalyzePrescriptionResponse } from "@/lib/api";
-
-const FEATURE_LABELS: Record<string, string> = {
-  age: "Patient age",
-  drug_count: "Number of drugs",
-  condition_count: "Number of conditions",
-  high_risk_drug_count: "High-risk drugs",
-  max_dosage_ratio: "Dosage vs. typical max",
-  interaction_score: "Interaction severity",
-  polypharmacy: "Polypharmacy (5+ drugs)",
-};
+import { DIVERGING, FEATURE_LABELS } from "@/lib/design";
 
 export default function ShapChart({ result }: { result: AnalyzePrescriptionResponse }) {
   const entries = Object.entries(result.shap_values);
 
   if (entries.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
-        <p className="text-sm font-medium text-slate-300">Why this score? (SHAP)</p>
-        <p className="mt-2 text-sm text-slate-500">Explanation unavailable for this prediction.</p>
+      <div className="rounded-card border border-graphite bg-abyssal-ink p-8">
+        <p className="font-mono text-caption uppercase tracking-[-0.02em] text-lichen">Why this score (SHAP)</p>
+        <p className="mt-3 text-body text-lichen/60">Explanation unavailable for this prediction.</p>
       </div>
     );
   }
@@ -26,29 +17,46 @@ export default function ShapChart({ result }: { result: AnalyzePrescriptionRespo
   const maxAbs = Math.max(...sorted.map(([, v]) => Math.abs(v)), 0.0001);
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
-      <p className="text-sm font-medium text-slate-300">Why this score? (SHAP feature contributions)</p>
-      <p className="mt-1 text-xs text-slate-500">Red pushes risk up, green pushes risk down.</p>
-      <div className="mt-4 space-y-3">
+    <div className="rounded-card border border-graphite bg-abyssal-ink p-8">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <p className="font-mono text-caption uppercase tracking-[-0.02em] text-lichen">Why this score (SHAP)</p>
+        <div className="flex items-center gap-4 font-mono text-caption text-lichen/70">
+          <span className="inline-flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: DIVERGING.positive }} />
+            increases risk
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: DIVERGING.negative }} />
+            decreases risk
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-4">
         {sorted.map(([feature, value]) => {
-          const widthPct = (Math.abs(value) / maxAbs) * 100;
+          const widthPct = (Math.abs(value) / maxAbs) * 50;
           const positive = value >= 0;
+          const color = positive ? DIVERGING.positive : DIVERGING.negative;
           return (
-            <div key={feature} className="grid grid-cols-[9rem_1fr] items-center gap-3 text-sm">
-              <span className="text-slate-400">{FEATURE_LABELS[feature] ?? feature}</span>
-              <div className="flex h-4 items-center">
-                <div className="relative h-2 w-full rounded bg-slate-800">
-                  <div
-                    className={`absolute top-0 h-2 rounded ${positive ? "left-1/2 bg-red-500" : "right-1/2 bg-emerald-500"}`}
-                    style={{ width: `${widthPct / 2}%` }}
-                  />
-                  <div className="absolute left-1/2 top-0 h-2 w-px bg-slate-600" />
-                </div>
-                <span className={`ml-2 w-16 text-xs ${positive ? "text-red-400" : "text-emerald-400"}`}>
-                  {value >= 0 ? "+" : ""}
-                  {value.toFixed(3)}
-                </span>
+            <div key={feature} className="grid grid-cols-[9rem_1fr_4.5rem] items-center gap-3">
+              <span className="text-caption text-lichen">{FEATURE_LABELS[feature] ?? feature}</span>
+              <div className="relative h-4">
+                <div className="absolute left-1/2 top-0 h-full w-px bg-graphite" />
+                <div
+                  data-tip={`${FEATURE_LABELS[feature] ?? feature}: ${value >= 0 ? "+" : ""}${value.toFixed(3)}`}
+                  tabIndex={0}
+                  className="absolute top-1 h-2 rounded-[4px] outline-none focus-visible:ring-1 focus-visible:ring-bone-white"
+                  style={{
+                    backgroundColor: color,
+                    width: `${widthPct}%`,
+                    left: positive ? "50%" : `${50 - widthPct}%`,
+                  }}
+                />
               </div>
+              <span className="tabular text-right text-caption text-lichen/70">
+                {value >= 0 ? "+" : ""}
+                {value.toFixed(3)}
+              </span>
             </div>
           );
         })}

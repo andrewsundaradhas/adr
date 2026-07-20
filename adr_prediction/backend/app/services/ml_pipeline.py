@@ -54,6 +54,31 @@ def is_high_risk_drug(key: str) -> bool:
     return bool(_DRUGS.get(key, {}).get("high_risk"))
 
 
+def typical_max_mg(key: str) -> Optional[float]:
+    return _DRUGS.get(key, {}).get("typical_max_mg")
+
+
+def dosage_ratio_for(key: str, dosage_mg: Optional[float]) -> Optional[float]:
+    """Single drug's dosage as a fraction of its typical max (for per-drug charts)."""
+    if dosage_mg is None:
+        return None
+    max_mg = typical_max_mg(key)
+    if not max_mg:
+        return None
+    return round(dosage_mg / max_mg, 4)
+
+
+def model_info() -> dict:
+    """Global model metadata for the 'why does the model think this' panel."""
+    return {
+        "model_type": _metadata.get("model_type"),
+        "trained_at": _metadata.get("trained_at"),
+        "metrics": _metadata.get("metrics", {}),
+        "feature_importances": _metadata.get("feature_importances", {}),
+        "training_data": _metadata.get("training_data"),
+    }
+
+
 def load_model() -> None:
     """Load the trained model artifact into module-level singletons."""
     global _model, _shap_explainer, _metadata

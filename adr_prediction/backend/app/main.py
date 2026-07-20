@@ -7,7 +7,13 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import ALLOWED_ORIGINS, MAX_UPLOAD_BYTES, MAX_UPLOAD_MB
-from app.schemas import AnalyzePrescriptionResponse, DrugEntry, HealthResponse, InteractionEntry
+from app.schemas import (
+    AnalyzePrescriptionResponse,
+    DrugEntry,
+    HealthResponse,
+    InteractionEntry,
+    ModelInfoResponse,
+)
 from app.services import ml_pipeline, prescription_nlp
 from app.services.pdf_extract import PDFExtractionError, extract_text
 
@@ -49,6 +55,13 @@ def health() -> HealthResponse:
         model_loaded=ml_pipeline.is_model_loaded(),
         model_version=ml_pipeline.model_version(),
     )
+
+
+@app.get("/model-info", response_model=ModelInfoResponse)
+def model_info() -> ModelInfoResponse:
+    if not ml_pipeline.is_model_loaded():
+        raise HTTPException(status_code=503, detail="ADR model is not loaded on the server.")
+    return ModelInfoResponse(**ml_pipeline.model_info())
 
 
 @app.post("/analyze-prescription", response_model=AnalyzePrescriptionResponse)
@@ -94,6 +107,8 @@ async def analyze_prescription(file: UploadFile = File(...)) -> AnalyzePrescript
             dosage_mg=d.dosage_mg,
             frequency=d.frequency,
             high_risk=ml_pipeline.is_high_risk_drug(d.key),
+            typical_max_mg=ml_pipeline.typical_max_mg(d.key),
+            dosage_ratio=ml_pipeline.dosage_ratio_for(d.key, d.dosage_mg),
         )
         for d in parsed.drugs
     ]
@@ -106,6 +121,7 @@ async def analyze_prescription(file: UploadFile = File(...)) -> AnalyzePrescript
         prr=result["prr"]["prr"],
         prr_signal=result["prr"]["prr_signal"],
         shap_values=result["shap_values"],
+        features=result["features"],
         interactions=[InteractionEntry(**entry) for entry in result["interactions"]],
         recommendation=result["recommendation"],
         patient_age=parsed.age,
