@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: adr-prediction-frontend
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    env: node
+    plan: free
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://adr-prediction-api.onrender.com
+        # Update this after backend deployment with actual backend URL

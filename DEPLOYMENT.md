@@ -4,26 +4,96 @@ This guide provides step-by-step instructions for deploying the ADR Prediction S
 
 ## Architecture Overview
 
+**Recommended Option**: Deploy both to Render (Free)
+- **Frontend**: Next.js 16 → Deployed to Render (Node.js runtime)
+- **Backend**: FastAPI with Tesseract OCR → Deployed to Render (Docker container)
+- **Why Render for Both?**: Single platform, easier management, free tier for both services, same network region
+
+**Alternative Option**: Split deployment
 - **Frontend**: Next.js 16 → Deployed to Vercel
-- **Backend**: FastAPI with Tesseract OCR → Deployed to Render (Docker container) OR Vercel Containers (paid)
-- **Why Render for Backend?**: The backend requires Tesseract OCR (a system-level package) for PDF text extraction. Vercel's serverless functions cannot install system packages. Options:
-  - **Render (Free)**: Docker web service with full system package support
-  - **Vercel Containers (Paid)**: Requires Vercel Pro plan ($20/month) for container deployment
+- **Backend**: FastAPI with Tesseract OCR → Deployed to Render (Docker container)
+- **Why Split?**: Vercel has excellent Next.js optimization and global CDN
 
 ## Prerequisites
 
 - GitHub account with repository: https://github.com/andrewsundaradhas/adr
-- Vercel account (free tier works)
 - Render account (free tier works)
 - Git installed locally
 
 ---
 
-## Part 1: Deploy Backend (Choose Option A or B)
+## Part 1: Deploy Both to Render (Recommended - Free & Simple)
 
-### Option A: Deploy to Render (Free - Recommended)
+This option deploys both frontend and backend on Render, making management easier with a single platform.
 
-Follow these steps for free deployment with full system package support.
+### Step 1: Deploy Backend to Render
+
+1. Go to https://render.com and sign up/login with GitHub
+2. Click **"New +"** → **"Blueprint"**
+3. Connect your GitHub repository: `andrewsundaradhas/adr`
+4. Render will detect `adr_prediction/backend/render.yaml` automatically
+5. Review the configuration:
+   - Service Type: Web Service
+   - Runtime: Docker
+   - Root Directory: `adr_prediction/backend`
+   - Health Check Path: `/health`
+6. Click **"Apply"** to deploy
+
+**Wait for deployment to complete** (5-10 minutes for Docker build and model training).
+
+7. Once deployed, copy your backend URL from Render dashboard
+   - Example: `https://adr-prediction-api.onrender.com`
+
+### Step 2: Deploy Frontend to Render
+
+1. In Render dashboard, click **"New +"** → **"Blueprint"**
+2. Connect the same GitHub repository: `andrewsundaradhas/adr`
+3. Render will detect `adr_prediction/frontend/render.yaml` automatically
+4. Review the configuration:
+   - Service Type: Web Service
+   - Runtime: Node
+   - Root Directory: `adr_prediction/frontend`
+   - Build Command: `npm install && npm run build`
+   - Start Command: `npm start`
+5. **Important**: Update the `NEXT_PUBLIC_API_URL` environment variable:
+   - Change from placeholder to your actual backend URL from Step 1
+   - Example: `https://adr-prediction-api.onrender.com`
+6. Click **"Apply"** to deploy
+
+**Wait for deployment to complete** (2-3 minutes).
+
+7. Once deployed, copy your frontend URL from Render dashboard
+   - Example: `https://adr-prediction-frontend.onrender.com`
+
+### Step 3: Configure CORS on Backend
+
+1. Go to your backend service in Render dashboard
+2. Click **"Environment"** tab
+3. Update `ADR_ALLOWED_ORIGINS`:
+   ```
+   ADR_ALLOWED_ORIGINS=https://adr-prediction-frontend.onrender.com
+   ```
+   (Replace with your actual frontend URL from Step 2)
+4. Click **"Save Changes"**
+5. Render will automatically redeploy the backend
+
+### Step 4: Test the Connection
+
+**Test Backend Health:**
+```bash
+curl https://your-backend-url.onrender.com/health
+```
+
+**Test Frontend:**
+1. Open your frontend URL in browser
+2. Upload a prescription PDF
+3. Verify the dashboard displays the risk report
+
+---
+
+## Part 2: Alternative - Split Deployment (Frontend on Vercel, Backend on Render)
+
+If you prefer Vercel for frontend optimization, follow this alternative approach.
 
 ### Step 1: Push Code to GitHub (Already Done)
 
