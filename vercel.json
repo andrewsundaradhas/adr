@@ -1,5 +1,0 @@
-{
-  "buildCommand": "cd adr_prediction/frontend && npm install && npm run build",
-  "outputDirectory": "adr_prediction/frontend/.next",
-  "framework": "nextjs"
-}
