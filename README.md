@@ -179,6 +179,11 @@ packages).
    from above.
 4. Deploy.
 
+> If you want one public URL for both frontend and backend on Vercel, import the
+> repository from the repository root and use the top-level `vercel.json` file.
+> That file routes `/api/*` to the backend service and all other traffic to the
+> frontend service.
+
 Once both are live, update `ADR_ALLOWED_ORIGINS` on Render to the real
 Vercel domain (instead of `*`) to lock down CORS.
 
